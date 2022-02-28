@@ -16,11 +16,14 @@ public class Registration {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="rollNumber")
 	private Integer rollNumber;
-   
+
+	@Column(name="role")
+	private String role;
+
     @Column(name="username")
     private String firstname;
 
-    @Column(name="lastname")
+	@Column(name="lastname")
     private String lastname;
 
     @Column(name="email",unique = true, nullable = false)
@@ -40,14 +43,6 @@ public class Registration {
 
 	public Registration() {
 		super();
-	}
-
-	public Integer getRollNumber() {
-		return rollNumber;
-	}
-
-	public void setRollNumber(Integer rollNumber) {
-		this.rollNumber = rollNumber;
 	}
 
 	public Registration(String firstname, String lastname, String email, String mobile, String password) {
@@ -102,8 +97,16 @@ public class Registration {
 	public String getPassword() {
 		return password;
 	}
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPassword(String password){
+		this.password=password;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 
 }

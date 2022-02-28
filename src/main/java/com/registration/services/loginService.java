@@ -1,7 +1,6 @@
 package com.registration.services;
 
 import com.registration.Entities.Registration;
-import com.registration.Repository.RegistrationRepository;
 import com.registration.helper.JwtUtil;
 import com.registration.model.JwtResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class loginService {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -26,13 +25,14 @@ public class loginService {
     public ResponseEntity<?> login(String email,String password)
     {
         try{
-            Registration registration=customUserDetailsService.getUser(email);
+            Registration registration= userDetailsServiceImpl.getUser(email);
             boolean isPasswordMatch =bCryptPasswordEncoder.matches(password, registration.getPassword());
             if(isPasswordMatch!=true){
                 throw new UsernameNotFoundException("user credentials wrong");
             }else{
-            UserDetails userDetails=customUserDetailsService.loadUserByUsername(registration.getEmail());
+            UserDetails userDetails= userDetailsServiceImpl.loadUserByUsername(registration.getEmail());
             String token=this.jwtUtil.generateToken(userDetails);
+                System.out.println("token "+token);
               return ResponseEntity.ok(new JwtResponse(token));
             }
         }

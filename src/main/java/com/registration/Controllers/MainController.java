@@ -1,28 +1,95 @@
 package com.registration.Controllers;
 
 import com.registration.Entities.Registration;
-import com.registration.services.CustomUserDetailsService;
+import com.registration.helper.JwtUtil;
+import com.registration.model.JwtRequest;
+import com.registration.model.JwtResponse;
+import com.registration.services.UserDetailsServiceImpl;
 
+import com.registration.services.loginService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.regex.*;
-
-import java.util.List;
-
 
 @RequiredArgsConstructor
 @RestController
 public class MainController {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserDetailsServiceImpl userDetailsServiceImpl;
     
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private loginService LoginService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+
+    @PostMapping("/token")
+    public ResponseEntity<?> generateToken(@RequestBody JwtRequest jwtRequest) throws Exception {
+
+        try{
+            System.out.println("try");
+            this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(jwtRequest.getUsername(),jwtRequest.getPassword()));
+        }catch(UsernameNotFoundException e)
+        {
+            System.out.println("catch");
+            e.printStackTrace();
+            throw new Exception("Bad Credentials");
+        }
+        //fine area ....
+        //than create token
+        UserDetails userDetails=this.userDetailsServiceImpl.loadUserByUsername(jwtRequest.getUsername());
+        String token=this.jwtUtil.generateToken(userDetails);
+        System.out.println("JWT :-"+token);
+
+        return ResponseEntity.ok(new JwtResponse(token));
+    }
+
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Registration registration) throws Exception {
+        String emailRegex = "^(.+)@(.+)$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(registration.getEmail());
+        System.out.println("email "+registration.getEmail());
+        if(!matcher.matches())
+        {
+            throw new Exception("email format wrong ");
+        }
+
+        String passwordValidation="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        Pattern patternn = Pattern.compile(passwordValidation);
+        Matcher matcherr = patternn.matcher(registration.getPassword());
+        System.out.println("password "+registration.getPassword());
+        if(!matcherr.matches())
+        {
+            throw new Exception("must include a capital alphabet and a small, a number and special character,");
+        }
+
+        if(matcher.matches() && matcherr.matches()){
+            return LoginService.login(registration.getEmail(), registration.getPassword());
+        }else {
+            System.out.println("else");
+            throw new UsernameNotFoundException("user credential wrong");
+        }
+    }
 
     @GetMapping("/home")
     public String welcome()
@@ -69,7 +136,7 @@ public class MainController {
         }
         if(matcher.matches() && matcherr.matches() && matcherrr.matches() && matchername.matches()){
             registration.setPassword(this.bCryptPasswordEncoder.encode(registration.getPassword()));
-            reg=customUserDetailsService.addUser(registration);
+            reg= userDetailsServiceImpl.addUser(registration);
             return reg;
         }else {
             throw new UsernameNotFoundException("user enter wrong format values");
@@ -78,63 +145,11 @@ public class MainController {
 
     }
 
-    @GetMapping("/users")
-    public List<Registration> users()
-    {
-        return customUserDetailsService.getAllUser();
-    }
-
-    @GetMapping("/user/{email}")
-    public Registration updateUser(@PathVariable("email") String email)
-    {
-        String regex = "^(.+)@(.+)$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(email);
-        System.out.println("matcher "+matcher.matches());
-        if(matcher.matches())
-        {
-            return customUserDetailsService.getUser(email);
-        }else{
-            throw new UsernameNotFoundException("user does not exits");
-        }
-    }
-
-    @PostMapping("/update/{email}")
-    public Registration updateUser(@PathVariable("email") String email,@RequestBody Registration registration)
-    {
-        Registration reg;
-        String emailRegex = "^(.+)@(.+)$";
-        Pattern pattern = Pattern.compile(emailRegex);
-        Matcher matcher = pattern.matcher(registration.getEmail());
-        System.out.println("email "+matcher.matches());
 
 
-        String passwordValidation="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
-        Pattern patternn = Pattern.compile(passwordValidation);
-        Matcher matcherr = patternn.matcher(registration.getPassword());
-        System.out.println("password "+matcherr.matches());
 
 
-        String mobileValidation="[6789][0-9]{9}";
-        Pattern patternnn = Pattern.compile(mobileValidation);
-        Matcher matcherrr = patternnn.matcher(registration.getMobile());
-        System.out.println("mobile "+matcherrr.matches());
-        if(matcher.matches() && matcherr.matches() && matcherrr.matches()){
-        registration.setPassword(this.bCryptPasswordEncoder.encode(registration.getPassword()));
-        reg=customUserDetailsService.update(email, registration);
-        return reg;
-        }else {
-            throw new UsernameNotFoundException("user enter wrong format values");
-        }
-    }
 
-    @DeleteMapping("/delete/{email}")
-    public String userDelete(@PathVariable("email") String email)
-    {
-        System.out.println("email");
-        customUserDetailsService.deleteByEmail(email);
-        return "success"+email;
-    }
 
 
 

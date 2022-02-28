@@ -1,7 +1,7 @@
 package com.registration.components;
 
 import com.registration.helper.JwtUtil;
-import com.registration.services.CustomUserDetailsService;
+import com.registration.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,7 +24,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -36,7 +36,6 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
         if(requestTokenHeader!=null && requestTokenHeader.startsWith("Bearer "))
         {
             JWT_TOKEN=requestTokenHeader.substring(7);
-
             try{
                 username=this.jwtUtil.getUsernameFromToken(JWT_TOKEN);
                 System.out.println(username);
@@ -44,7 +43,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
                 e.printStackTrace();
             }
 
-            UserDetails userDetails=this.customUserDetailsService.loadUserByUsername(username);
+            UserDetails userDetails=this.userDetailsServiceImpl.loadUserByUsername(username);
             if(username !=null && SecurityContextHolder.getContext().getAuthentication()==null)
             {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken=new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());

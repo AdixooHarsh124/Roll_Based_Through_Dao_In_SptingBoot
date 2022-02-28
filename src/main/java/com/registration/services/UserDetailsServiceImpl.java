@@ -2,14 +2,14 @@ package com.registration.services;
 
 import com.registration.Entities.Registration;
 import com.registration.Repository.RegistrationRepository;
+import com.registration.helper.JwtUtil;
+import com.registration.model.JwtResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 
 
 import java.util.ArrayList;
@@ -17,39 +17,52 @@ import java.util.List;
 
 
 @Service
-public class CustomUserDetailsService implements UserDetailsService{
+public class UserDetailsServiceImpl implements UserDetailsService{
 
-
-    @Autowired
-    private RegistrationRepository registrationRepository;
     private Registration reg=null;
+    private User user;
     int mob=1;
     int email=1;
 
+    @Autowired
+    private RegistrationRepository registrationRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
-    {
-        Registration registration =  getUser(username);
-            return new User(username,registration.getPassword(),new ArrayList<>());
+    public CustomUserDetails loadUserByUsername(String useremail) throws UsernameNotFoundException{
+
+        Registration registration=registrationRepository.getUserByUserName(useremail);
+
+        if(registration==null)
+        {
+            throw new UsernameNotFoundException("user not found");
+        }
+        System.out.println("success in loadUserByUserName");
+        CustomUserDetails CustomUserDetails =new CustomUserDetails(registration);
+
+        User user=new User(useremail,registration.getPassword(),new ArrayList<>());
+
+
+        String token=this.jwtUtil.generateToken(user);
+        System.out.println("token "+token);
+        return CustomUserDetails;
+
     }
 
     /**
-     *
      *Get ALL Users
-     *
      */
 
     public List<Registration> getAllUser()
     {
         List<Registration> regi=registrationRepository.findAll();
-
         return regi;
     }
 
     /**
-     *
      *  Add New User in Mysqldb
-     *
      */
 
     public Registration addUser(Registration registration) throws Exception
@@ -89,15 +102,12 @@ public class CustomUserDetailsService implements UserDetailsService{
                 throw new Exception("email is already register");
             }
             System.out.println("please fill details in right way");
-//            e.printStackTrace();
         }
         return reg;
     }
 
     /**
-     *
      * Get a User by Email
-     *
      **/
 
     public Registration getUser(String email)
@@ -115,7 +125,11 @@ public class CustomUserDetailsService implements UserDetailsService{
                 result=1;
                 return user;
             }
-        }
+        }    //new update
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
+//    }
         if(result==0){
         throw new UsernameNotFoundException("user not found!!!");
         }
@@ -125,10 +139,7 @@ public class CustomUserDetailsService implements UserDetailsService{
 
     public Registration update(String email,Registration registration)
     {
-        System.out.println("email "+email);
         Registration reg=getUser(email);
-        System.out.println("registration email "+registration.getEmail());
-        System.out.println("user "+getUser(email).equals(registration.getEmail()));
        if(getUser(email).getEmail().equals(registration.getEmail())==false)
        {
            System.out.println(" condition ");
@@ -156,4 +167,5 @@ public class CustomUserDetailsService implements UserDetailsService{
             throw new UsernameNotFoundException("user doesn't found");
         }
     }
+
 }
