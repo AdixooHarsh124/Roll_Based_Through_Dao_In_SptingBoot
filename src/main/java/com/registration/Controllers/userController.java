@@ -2,6 +2,7 @@ package com.registration.Controllers;
 
 import com.registration.Entities.Registration;
 import com.registration.services.UserDetailsServiceImpl;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SecurityRequirement(name = "javainuseapi")
 @RequestMapping("/user")
 @RequiredArgsConstructor
 @RestController

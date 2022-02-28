@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 
 @EntityScan("com.registration")
+@OpenAPIDefinition(info = @Info(title = "Employees API", version = "2.0", description = "user table"))
+@SecurityScheme(name = "javainuseapi", scheme = "basic", type = SecuritySchemeType.HTTP, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 public class RegistrationApplication {
 

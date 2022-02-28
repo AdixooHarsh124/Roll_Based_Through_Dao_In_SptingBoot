@@ -20,7 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.regex.*;
-
+@SecurityRequirement(name = "javainuseapi")
 @RequiredArgsConstructor
 @RestController
 public class MainController {

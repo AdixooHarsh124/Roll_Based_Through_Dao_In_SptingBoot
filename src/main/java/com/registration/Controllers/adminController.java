@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.security.RolesAllowed;
 
-
+@SecurityRequirement(name = "javainuseapi")
 @RequiredArgsConstructor
 @RequestMapping("/admin")
 @RestController
